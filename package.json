@@ -1,0 +1,6 @@
+{
+  "name": "pingler-app",
+  "version": "1.0.0",
+  "description": "Ping service like Pingler",
+  "dependencies": {}
+}
