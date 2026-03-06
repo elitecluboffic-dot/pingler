@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PingKu — Ping Your Site Instantly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050a0e;
+      --surface: #0d1117;
+      --border: #1a2332;
+      --accent: #00e5ff;
+      --accent2: #ff3d71;
+      --text: #e8f4f8;
+      --muted: #4a6070;
+      --success: #00e676;
+      --warning: #ffab00;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: rgba(0,229,255,0.06);
+      top: -200px; left: -100px;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: rgba(255,61,113,0.05);
+      bottom: -100px; right: -100px;
+      animation: float 10s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(30px, -30px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .logo-icon {
+      width: 48px; height: 48px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      width: 24px; height: 24px;
+      border: 3px solid var(--bg);
+      border-radius: 50%;
+      animation: ping-wave 1.5s ease-out infinite;
+    }
+
+    @keyframes ping-wave {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--bg);
+      border-radius: 50%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-text {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--text);
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    header p {
+      color: var(--muted);
+      font-size: 15px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    .stat-item {
+      flex: 1;
+      background: var(--surface);
+      padding: 18px;
+      text-align: center;
+    }
+
+    .stat-item:first-child { border-radius: 15px 0 0 15px; }
+    .stat-item:last-child { border-radius: 0 15px 15px 0; }
+
+    .stat-num {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Form card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      display: block;
+      width: 4px; height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input[type="url"],
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input[type="url"]:focus,
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+    }
+
+    input::placeholder { color: var(--muted); }
+
+    .btn-ping {
+      width: 100%;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .btn-ping:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,229,255,0.3);
+    }
+
+    .btn-ping:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-ping:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-ping .loader {
+      display: none;
+      width: 20px; height: 20px;
+      border: 2px solid var(--bg);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Results */
+    #results {
+      display: none;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .result-score {
+      font-size: 13px;
+      font-family: 'Space Mono', monospace;
+      color: var(--muted);
+    }
+
+    .result-score strong {
+      color: var(--accent);
+      font-size: 18px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+
+    .service-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-family: 'Space Mono', monospace;
+      transition: border-color 0.3s;
+      animation: slideIn 0.3s ease forwards;
+      opacity: 0;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .service-item.success { border-color: rgba(0,230,118,0.3); }
+    .service-item.fail { border-color: rgba(255,61,113,0.2); }
+
+    .service-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .service-item.success .service-dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .service-item.fail .service-dot { background: var(--muted); }
+
+    /* History */
+    .history-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: slideIn 0.3s ease forwards;
+    }
+
+    .history-url {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .history-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(0,229,255,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,229,255,0.2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .history-time {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .empty-history {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      transition: transform 0.3s;
+      z-index: 100;
+      box-shadow: 0 8px 30px rgba(0,229,255,0.15);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      .stats-bar { flex-direction: column; gap: 1px; }
+      .stat-item:first-child { border-radius: 15px 15px 0 0; }
+      .stat-item:last-child { border-radius: 0 0 15px 15px; }
+      .services-grid { grid-template-columns: 1fr 1fr; }
+      .history-time { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">
+          <div class="logo-dot"></div>
+        </div>
+        <div class="logo-text">Ping<span>Ku</span></div>
+      </div>
+      <p>// notify search engines about your latest content</p>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-num" id="stat-total">0</span>
+        <span class="stat-label">Total Pings</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">10</span>
+        <span class="stat-label">Services</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">Free</span>
+        <span class="stat-label">Forever</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="card">
+      <div class="card-title">Ping Your Site</div>
+
+      <div class="form-group">
+        <label>Blog / Site Name</label>
+        <input type="text" id="blogName" placeholder="My Awesome Blog" />
+      </div>
+
+      <div class="form-group">
+        <label>URL to Ping</label>
+        <input type="url" id="siteUrl" placeholder="https://yourdomain.com/feed" />
+      </div>
+
+      <button class="btn-ping" id="pingBtn" onclick="sendPing()">
+        <span class="btn-text">⚡ SEND PING NOW</span>
+        <div class="loader" id="loader"></div>
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="card" id="results">
+      <div class="card-title">Ping Results</div>
+      <div class="result-header">
+        <div>
+          <div style="font-size: 13px; color: var(--muted); margin-bottom: 4px; font-family: 'Space Mono', monospace;">
+            Pinged to <span id="res-url" style="color: var(--text);"></span>
+          </div>
+        </div>
+        <div class="result-score">
+          <strong id="res-success">0</strong> / <span id="res-total">0</span> success
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+      </div>
+      <div class="services-grid" id="services-grid"></div>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+      <div class="card-title">Recent Pings</div>
+      <div id="history-list">
+        <div class="empty-history">// no pings yet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Load history on start
+    loadHistory();
+
+    async function sendPing() {
+      const url = document.getElementById('siteUrl').value.trim();
+      const blogName = document.getElementById('blogName').value.trim() || 'My Blog';
+
+      if (!url) { showToast('⚠ Please enter a URL'); return; }
+
+      try { new URL(url); } catch { showToast('⚠ Invalid URL format'); return; }
+
+      // Loading state
+      const btn = document.getElementById('pingBtn');
+      btn.disabled = true;
+      document.querySelector('.btn-text').style.display = 'none';
+      document.getElementById('loader').style.display = 'block';
+
+      try {
+        const res = await fetch('/.netlify/functions/ping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, blogName })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          showResults(data);
+          loadHistory();
+          showToast('✓ Ping sent successfully!');
+        } else {
+          showToast('✗ ' + (data.error || 'Failed to ping'));
+        }
+      } catch (err) {
+        showToast('✗ Network error, try again');
+      } finally {
+        btn.disabled = false;
+        document.querySelector('.btn-text').style.display = 'block';
+        document.getElementById('loader').style.display = 'none';
+      }
+    }
+
+    function showResults(data) {
+      const resultsEl = document.getElementById('results');
+      resultsEl.style.display = 'block';
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      document.getElementById('res-url').textContent = data.url;
+      document.getElementById('res-success').textContent = data.successCount;
+      document.getElementById('res-total').textContent = data.totalServices;
+
+      const pct = Math.round((data.successCount / data.totalServices) * 100);
+      document.getElementById('progress-fill').style.width = pct + '%';
+
+      const grid = document.getElementById('services-grid');
+      grid.innerHTML = '';
+
+      data.results.forEach((r, i) => {
+        const el = document.createElement('div');
+        el.className = `service-item ${r.success ? 'success' : 'fail'}`;
+        el.style.animationDelay = (i * 0.05) + 's';
+        el.innerHTML = `
+          <div class="service-dot"></div>
+          <span>${r.name}</span>
+        `;
+        grid.appendChild(el);
+      });
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/.netlify/functions/history');
+        const data = await res.json();
+        renderHistory(data.history || []);
+
+        if (data.history) {
+          document.getElementById('stat-total').textContent = data.history.length;
+        }
+      } catch (e) {
+        // silently fail
+      }
+    }
+
+    function renderHistory(items) {
+      const el = document.getElementById('history-list');
+      if (!items.length) {
+        el.innerHTML = '<div class="empty-history">// no pings yet</div>';
+        return;
+      }
+
+      el.innerHTML = items.map(item => `
+        <div class="history-item">
+          <div class="history-url" title="${item.url}">${item.url}</div>
+          <div class="history-badge">${item.successCount}/${item.totalServices}</div>
+          <div class="history-time">${timeAgo(item.createdAt)}</div>
+        </div>
+      `).join('');
+    }
+
+    function timeAgo(dateStr) {
+      const now = new Date();
+      const date = new Date(dateStr);
+      const diff = Math.floor((now - date) / 1000);
+      if (diff < 60) return diff + 's ago';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // Enter key submit
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendPing();
+    });
+  </script>
+</body>
+</html>
